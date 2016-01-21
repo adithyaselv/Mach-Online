@@ -1,0 +1,206 @@
+<html>
+<head>
+    <title>SuperWeb Control</title>
+    <link rel="stylesheet" href='/static/style.css' />
+    <script>
+        function getjso(){
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange=function(){
+                if(xhttp.readyState == 4 && xhttp.status ==200){
+                    stat=JSON.parse(xhttp.responseText);
+                    document.getElementById("prstat").innerHTML="Print Status: "+stat.status1;
+                    document.getElementById("progress").innerHTML=stat.progress+" %";
+                    document.getElementById("volt").innerHTML="VOLTAGE: "+stat.voltage;
+                    document.getElementById("curr").innerHTML="CURRENT: "+stat.current;
+                    document.getElementById("progbar").innerHTML='<div class="progress-bar"  style="background: -webkit-linear-gradient(left, #11a8ab '+stat.progress+'%,#50597b '+stat.progress+'%);background: -ms-linear-gradient(left, #11a8ab '+stat.progress+'%,#50597b'+stat.progress+'%);background: linear-gradient(to right, #11a8ab '+stat.progress+'%,#50597b'+stat.progress+'%);"></div>'
+                    document.getElementById("pc").innerHTML="POWER CONSUMED: "+stat.pc;
+                    document.getElementById("pf").innerHTML="POWER FACTOR: "+stat.pf;
+                    document.getElementById("btemp").innerHTML="BED TEMP : "+stat.btemp+"/"+stat.btarget;
+                    document.getElementById("etemp").innerHTML="EXT. TEMP : "+stat.etemp+"/"+stat.etarget;
+                    document.getElementById("image1").innerHTML='<img width="200px" alt="3Dprint" src="/static/test.jpeg" />'
+                    if(stat.power_stat ==1)
+                    {
+                        document.getElementById("pstat").innerHTML= '<p class="ios os scnd-font-color">ON</p><span class="fontawesome-off " style="color:#32CD32;"></span>';
+                    }
+                    else
+                     {
+                        document.getElementById("pstat").innerHTML= '<p class="ios os scnd-font-color">OFF</p><span class="fontawesome-off " style="color:red;"></span>';
+                    }
+                    if(stat.lstat==1)
+                    {
+                        document.getElementById("lightstat").innerHTML= '<p class="win os scnd-font-color">Light ON</p> <span class="entypo-lamp " style="color:#32CD32;"></span>';
+                    }
+                    else
+                     {
+                        document.getElementById("lightstat").innerHTML= '<p class="win os scnd-font-color">Light OFF</p> <span class="entypo-lamp " style="color:red;"></span>';
+                    }
+                    if(stat.pps==2)
+                    {
+                        document.getElementById("pps").innerHTML= '<li><a class="comments" href="#"><p><span class="icon fontawesome-play scnd-font-color"></span></li></p></a><li><a class="views" href="#"><p><span class="icon fontawesome-pause scnd-font-color"></span></li></p></a><li><a class="likes" href="#"><p><span class="icon fontawesome-remove " style="color:#32CD32;"></span></li></p></a>'
+ 
+                    }
+                    else if(stat.pps==1)
+                    {
+                        document.getElementById("pps").innerHTML= '<li><a class="comments" href="#40"><p><span class="icon fontawesome-play scnd-font-color"></span></li></p></a><li><a class="views" href="#41"><p><span class="icon fontawesome-pause " style="color:#32CD32;"></span></li></p></a><li><a class="likes" href="#42"><p><span class="icon fontawesome-remove scnd-font-color"></span></li></p></a>'
+
+                    }
+                    else
+                    {
+
+                        document.getElementById("pps").innerHTML= '<li><a class="comments" href="#40"><p><span class="icon fontawesome-play " style="color:#32CD32;"></span></li></p></a><li><a class="views" href="#41"><p><span class="icon fontawesome-pause scnd-font-color"></span></li></p></a><li><a class="likes" href="#42"><p><span class="icon fontawesome-remove scnd-font-color"></span></li></p></a>'
+                    }
+
+                }
+                };
+                xhttp.open("GET","/getdata",true);
+                xhttp.send();
+            
+        }
+    function powercontrol(){
+         var xhttp = new XMLHttpRequest();
+         xhttp.onreadystatechange=function(){
+             if(xhttp.readyState == 4 && xhttp.status ==200){
+                 getjso();
+                }
+         };
+         xhttp.open("GET","/powercontrol",true);
+         xhttp.send();
+     }
+
+    function lightcon(){
+         var xhttp = new XMLHttpRequest();
+         xhttp.onreadystatechange=function(){
+             if(xhttp.readyState == 4 && xhttp.status ==200){
+        getjso();
+             }
+         };
+         xhttp.open("GET","/lightcon",true);
+         xhttp.send();
+     }
+    function capture(){
+         var xhttp = new XMLHttpRequest();
+         xhttp.onreadystatechange=function(){
+             if(xhttp.readyState == 4 && xhttp.status ==200){
+                     cap=xhttp.responseText;
+                     document.getElementById("image1").src='/static/images/'+cap+'.jpeg?'+new Date().getTime();
+             }
+         };
+         xhttp.open("GET","/capture",true);
+         xhttp.send();
+     }
+
+     function changepps(x){
+         var xhttp = new XMLHttpRequest();
+         xhttp.onreadystatechange=function(){
+             if(xhttp.readyState == 4 && xhttp.status ==200){
+                 getjso();
+             }
+         };
+         if (x.id=="play")
+         {
+             xhttp.open("POST","/pps",true);
+             xhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+             xhttp.send("pps=0");
+         }
+         else if (x.id=="pause")
+         {
+  xhttp.open("POST","/pps",true);
+             xhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+             xhttp.send("pps=1");
+
+         }
+         else if(x.id=="stop")
+         {
+  xhttp.open("POST","/pps",true);
+             xhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+             xhttp.send("pps=2");
+
+         }
+         }
+
+
+
+    </script>
+
+</head>
+<body onload=getjso()>
+	<div class="main-container">
+	<header class="block">
+                <ul class="header-menu horizontal-list">
+                    <h1 style="text-align: center;">Welcome to SuperWeb Control</h1>
+                </ul>
+            </header>
+
+ <div class="left-container container">
+  
+  <div class="loading block"> <!-- PROFILE (MIDDLE-CONTAINER) -->
+                    <span id="prstat" style ="margin-left:25px;"></span><br>
+                    <div id="progbar"></div>
+                    <p><span class="icon fontawesome-cloud-download scnd-font-color"></span>Print Progress...<p id="progress"></p></p>
+                     <ul id="pps" class="profile-options horizontal-list">
+                        <li><a class="comments" id="play" onclick=changepps(this) href="#"><p><span class="icon fontawesome-play scnd-font-color"></span></li></p></a>
+                        <li><a class="views" id="pause" onclick=changepps(this) href="#"><p><span class="icon fontawesome-pause scnd-font-color"></span></li></p></a>
+                        <li><a class="likes"  id="stop" onclick=changepps(this) href="#"><p><span class="icon fontawesome-remove scnd-font-color"></span></li></p></a>
+                    </ul>
+                </div>
+    <div class="profile2 block"> <!-- PROFILE (MIDDLE-CONTAINER) -->
+                    <a class="add-button" href="#" onclick=capture()><span class="icon entypo-plus scnd-font-color"></span></a>
+                    <div class="profile-picture big-profile-picture clear">
+                        <img id="image1" width="200px" alt="3Dprint" src="/static/test.jpeg" />
+                    </div>
+                    <h1 class="user-name">Snap</h1>
+                    <div class="profile-description">
+                        <p class="scnd-font-color">Take a current snap by pressing +</p>
+                    </div>
+                </div>
+   </div>
+
+    <div class="middle-container container">
+<ul class="social block"> <!-- SOCIAL (MIDDLE-CONTAINER) -->
+                    <li><a href="#52"><div class="googleplus icon"><span class="fontawesome-bolt"></span></div><h2 id="volt" class="googleplus titular">VOLTAGE</h2></li></a>
+                    <li><a href="#50"><div class="facebook icon"><span class="fontawesome-dashboard"></span></div><h2 id="curr" class="facebook titular">CURRENT:</h2></li></a>
+                    <li><a href="#51"><div class="twitter icon"><span class="fontawesome-adjust"></span></div><h2 id="pc" class="twitter titular">POWER CONSUMED: </h2></li></a>
+                    <li><a href="#52"><div class="powerf icon"><span class="fontawesome-leaf"></span></div><h2 id="pf" class="powerf titular">POWER FACTOR</h2></li></a>
+                    <li><a href="#52"><div class="googleplus icon"><span class="fontawesome-fire"></span></div><h2 id="btemp" class="googleplus titular">BED TEMP.</h2></li></a>
+                    <li><a href="#52"><div class="googleplus icon"><span class="fontawesome-asterisk"></span></div><h2 id="etemp" class="googleplus titular">EXTRUDER TEMP.</h2></li></a>
+                    
+ </ul>
+</div>
+    <div class="right-container container">
+      <div class="donut-chart-block block"> <!-- DONUT CHART BLOCK (LEFT-CONTAINER) -->
+                    <h2 class="titular">PRINTER CONTROLS</h2>
+                    <ul class="os-percentages horizontal-list">
+                        <a href="#" onclick=powercontrol() ><li id="pstat">
+                            <p class="ios os scnd-font-color">ON</p>
+                            <span class="fontawesome-off " style="color:red;"></span>
+                        </li>
+                        <a href="#" onclick=lightcon()>
+                        <li id="lightstat">
+                            <p class="win os scnd-font-color">Light OFF</p>
+                            <span class="entypo-lamp "></span>
+                        </li>
+                        </a>
+                        <a href="#" onclick=getjso()>
+                        <li>
+                        <p class="mac os scnd-font-color">Refresh</p>
+                            <span class="entypo-ccw "></span>
+                        </li></a>
+                        <li>
+                            <p class="linux os scnd-font-color">Dummy </p>
+                            <span class="entypo-light-up "></span>
+                        </li>
+                       </ul>
+                </div>
+   <form action="" method="post" enctype="multipart/form-data">
+  <div class="join-newsletter block "> <!-- JOIN NEWSLETTER (RIGHT-CONTAINER) -->
+                    <h2 class="titular">UPLOAD NEW FILE</h2>
+                   <input type=file name=file class="choose">
+                   <input type=submit value=Print class="upload">
+                </div>
+    </form>
+                    
+</div>
+</div>
+</div>
+</body>
+</html>
