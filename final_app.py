@@ -8,6 +8,8 @@ from werkzeug import secure_filename
 from ABE_ExpanderPi import ADC
 import RPi.GPIO as GPIO
 import serial
+import sqlite3
+
 
 red_led=24
 green_led=23
@@ -18,7 +20,8 @@ btemp="NA"
 etemp="NA"
 etargettemp="NA"
 btargettemp="NA"
-progress = 0
+progress = -1
+prevprogress= -1
 counter=0
 access = ""
 out = ""
@@ -58,6 +61,9 @@ adc=ADC()
 app= Flask(__name__)
 app.config['UPLOAD_FOLDER']=upload_folder
 
+curr_error=adc.read_adc_voltage(2)-2.4;
+
+
 def allow_file(filename):
     return '.' in filename and \
             filename.rsplit('.',1)[1] in allowed_ext
@@ -72,6 +78,23 @@ def index():
             filename="job.gcode"
             file.save(os.path.join(app.config['UPLOAD_FOLDER'],filename))
             pps=4
+	    try:
+                os.remove('test.db')
+	    except:
+		pass
+            conn = sqlite3.connect('test.db')
+            try:
+                conn.execute('''CREATE TABLE mperform
+                        (percent INT PRIMARY KEY    NOT NULL,
+                        volt           FLOAT    NOT NULL,
+                        current         FLOAT   NOT NULL,
+                        btemp           FLOAT   NOT NULL,
+                        etemp           FLOAT   NOT NULL,
+                        power         FLOAT NOT NULL);''')
+            except :
+                pass
+            conn.close()
+
             return render_template('test.html')
 
     return render_template('test.html')
@@ -91,11 +114,87 @@ def jsongive():
     li={"server":"rasp","ports":"4000"}
     return jsonify(li)
 
+@app.route('/vgraph')
+def vgraph():
+    return render_template("vgraph.html")
+
+@app.route('/pgraph')
+def pgraph():
+    return render_template("pgraph.html")
+
+@app.route('/cgraph')
+def cgraph():
+    return render_template("cgraph.html")
+
+@app.route('/btempgraph')
+def btempgraph():
+    return render_template("btempgraph.html")
+
+@app.route('/pfgraph')
+def pfgraph():
+    return render_template("pfgraph.html")
+
+@app.route('/etempgraph')
+def etempgraph():
+    return render_template("etempgraph.html")
+
+@app.route('/report')
+def report():
+    return render_template("report.html")
+
+def fetchbase(x):
+   conn = sqlite3.connect('test.db')
+   print "Opened database successfully";
+   print "SELECT "+x+" from mperform"
+   try:
+       cursor = conn.execute("SELECT "+x+" from mperform")
+   except Exception as inst:
+       print inst
+   A=[]
+   for row in cursor:
+       A.append(row[0])
+   print "Operation done successfully";
+   conn.close()
+   return A
+
+@app.route('/chartdata')
+def chartdata():
+    global btargettemp
+    global etargettemp
+    pprac=fetchbase("power")
+    pth=98*[60]
+    pth.insert(0,100)
+    pth.insert(1,80)
+    pfprac=[1]*100
+    pfth=[1]*100
+    vprac=fetchbase("volt")
+    cprac=fetchbase("current")
+    btempprac=fetchbase("btemp")
+    etempprac=fetchbase("etemp")
+    vth=100*[10]
+    cth=98*[6]
+    cth.insert(0,10)
+    cth.insert(1,8)
+    btempth=99*[btargettemp]
+    btempth.insert(0,0)
+    etempth=99*[etargettemp]
+    etempth.insert(0,0)
+    percent=fetchbase("percent")
+    dataout={"pprac":pprac,"vprac":vprac,"cprac":cprac,"pfprac":pfprac,"btempprac":btempprac,"etempprac":etempprac,"vth":vth,"pth":pth,"pfth":pfth,"cth":cth,"btempth":btempth,"etempth":etempth,"percent":percent}
+    return jsonify(dataout)
+
+
 @app.route('/getdata')
 def givedata():
     global progress
+    if progress<0:
+	tempprogress=0
+    else:
+	tempprogress=progress
     vol=round(adc.read_adc_voltage(4)*12.0/4.1,3)
-    cur=round((adc.read_adc_voltage(2)-2.4)*(20/2.4),3)
+    cur=round((adc.read_adc_voltage(2)-curr_error-2.4)*(20/2.4),3)
+    if cur<0:
+        cur=0
     powe=round(vol*cur,3)
     pf=1
     global pps
@@ -112,7 +211,7 @@ def givedata():
     rstate=int(GPIO.input(relay))
     File="top.code"
     lstate=1
-    jsoval={"progress":round(progress,1),"status1":print_status,"voltage":str(vol)+" V","file1":"top.gcode","current":str(cur)+" A","btemp":str(btemp),"etemp":str(etemp),"pc":str(powe)+" W","pf":str(pf),"power_stat":rstate,"lstat":lstate,"etarget":etargettemp+" C" ,"btarget":btargettemp+" C","pps":pps}
+    jsoval={"progress":round(tempprogress,1),"status1":print_status,"voltage":str(vol)+" V","file1":"top.gcode","current":str(cur)+" A","btemp":str(btemp),"etemp":str(etemp),"pc":str(powe)+" W","pf":str(pf),"power_stat":rstate,"lstat":lstate,"etarget":etargettemp+" C" ,"btarget":btargettemp+" C","pps":pps}
 
     send_data=jsoval
     return jsonify(send_data)
@@ -154,10 +253,35 @@ def capture():
 def lolol():
     app.run(debug=False,use_reloader=False,host='0.0.0.0')
 
+def dbupdate():
+    while 1:
+    	global progress
+    	global prevprogress
+    	global btemp
+    	global etemp
+	if btemp!="NA" and etemp!="NA":
+    	    if int(progress) > prevprogress:
+                prevprogress = int(progress)
+            	vol=round(adc.read_adc_voltage(4)*12.0/4.1,3)
+            	cur=round((adc.read_adc_voltage(2)-2.4)*(20/2.4),3)
+            	powe=round(vol*cur,3)
+            	if cur<0:
+                    cur=0
+            	conn = sqlite3.connect('test.db')
+            	conn.execute("INSERT INTO mperform (percent,volt,current,btemp,etemp,power) VALUES ("+str(int(progress))+","+str(vol)+","+str(cur)+","+str(btemp)+","+str(etemp)+","+str(powe)+" )");
+            	print "INSERT INTO mperform (percent,volt,current,btemp,etemp,power) VALUES ("+str(int(progress))+","+str(vol)+","+str(cur)+","+str(btemp)+","+str(etemp)+","+str(powe)+" )"
+	    	conn.commit()
+            	conn.close()
+
+
 if __name__=='__main__':
     t2=Thread(target=lolol)
     t2.setDaemon(True)
     t2.start()
+
+    t3=Thread(target=dbupdate)
+    t3.setDaemon(True)
+    t3.start()
 
     while 1:
         access = ""
@@ -214,7 +338,7 @@ if __name__=='__main__':
         if GPIO.input(relay) and startup == 1 :
             if pps == 0:
                 if line_no < len(content) :
-                    if "ok 0" in out:
+                    if "ok 0" in out or "wait" in out:
                         if counter > 10 :
                             print_ser.write("M105\r")
                             counter = 0;
@@ -235,6 +359,13 @@ if __name__=='__main__':
                                 print line
                         progress = (line_no/float(len(content)))*100
                         counter += 1
+	    if pps == 1:
+            	counter += 0.25
+            if pps == 2:
+            	counter += 0.25
+            if counter > 10 and pps != 0 and startup == 1:
+            	print_ser.write("M105\r")
+            	counter = 0
             if out.find("T:") != -1:
                 etemp = out[out.find("T:")+2:].strip()
                 etemp = etemp[:etemp.find(" ")].strip()
@@ -255,13 +386,6 @@ if __name__=='__main__':
             out = print_ser.readline()
             out.strip()
             print out
-        if pps == 1:
-            counter += 0.25
-        if pps == 2:
-            counter += 0.25
-        if counter > 10 and pps != 0 and startup == 1:
-            print_ser.write("M105\r")
-            counter = 0
     rfid_ser.close()
 
 

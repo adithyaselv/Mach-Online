@@ -1,6 +1,6 @@
 <html>
 <head>
-    <title>SuperWeb Control</title>
+    <title>Mach Online</title>
     <link rel="stylesheet" href='/static/style.css' />
     <script>
         function getjso(){
@@ -13,7 +13,7 @@
                     document.getElementById("volt").innerHTML="VOLTAGE: "+stat.voltage;
                     document.getElementById("curr").innerHTML="CURRENT: "+stat.current;
                     document.getElementById("progbar").innerHTML='<div class="progress-bar"  style="background: -webkit-linear-gradient(left, #11a8ab '+stat.progress+'%,#50597b '+stat.progress+'%);background: -ms-linear-gradient(left, #11a8ab '+stat.progress+'%,#50597b'+stat.progress+'%);background: linear-gradient(to right, #11a8ab '+stat.progress+'%,#50597b'+stat.progress+'%);"></div>'
-                    document.getElementById("pc").innerHTML="POWER CONSUMED: "+stat.pc;
+                    document.getElementById("pc").innerHTML="POWER : "+stat.pc;
                     document.getElementById("pf").innerHTML="POWER FACTOR: "+stat.pf;
                     document.getElementById("btemp").innerHTML="BED TEMP : "+stat.btemp+"/"+stat.btarget;
                     document.getElementById("etemp").innerHTML="EXT. TEMP : "+stat.etemp+"/"+stat.etarget;
@@ -36,18 +36,17 @@
                     }
                     if(stat.pps==2)
                     {
-                        document.getElementById("pps").innerHTML= '<li><a class="comments" href="#"><p><span class="icon fontawesome-play scnd-font-color"></span></li></p></a><li><a class="views" href="#"><p><span class="icon fontawesome-pause scnd-font-color"></span></li></p></a><li><a class="likes" href="#"><p><span class="icon fontawesome-remove " style="color:#32CD32;"></span></li></p></a>'
+                        document.getElementById("pps").innerHTML= '<li><a class="comments" id="play" href="#" onclick=changepps(this)><p><span class="icon fontawesome-play scnd-font-color"></span></li></p></a><li><a class="views" href="#" id="pause" onclick=changepps(this)><p><span class="icon fontawesome-pause scnd-font-color"></span></li></p></a><li><a class="likes" id="stop" href="#" onclick=changepps(this)><p><span class="icon fontawesome-remove " style="color:#32CD32;"></span></li></p></a>'
  
                     }
                     else if(stat.pps==1)
                     {
-                        document.getElementById("pps").innerHTML= '<li><a class="comments" href="#40"><p><span class="icon fontawesome-play scnd-font-color"></span></li></p></a><li><a class="views" href="#41"><p><span class="icon fontawesome-pause " style="color:#32CD32;"></span></li></p></a><li><a class="likes" href="#42"><p><span class="icon fontawesome-remove scnd-font-color"></span></li></p></a>'
+                        document.getElementById("pps").innerHTML= '<li><a class="comments" id="play" href="#" onclick=changepps(this)><p><span class="icon fontawesome-play scnd-font-color"></span></li></p></a><li><a class="views" id="pause" href="#" onclick=changepps(this)><p><span class="icon fontawesome-pause " style="color:#32CD32;"></span></li></p></a><li><a class="likes" id="stop" href="#" onclick=changepps(this)><p><span class="icon fontawesome-remove scnd-font-color"></span></li></p></a>'
 
                     }
                     else
                     {
-
-                        document.getElementById("pps").innerHTML= '<li><a class="comments" href="#40"><p><span class="icon fontawesome-play " style="color:#32CD32;"></span></li></p></a><li><a class="views" href="#41"><p><span class="icon fontawesome-pause scnd-font-color"></span></li></p></a><li><a class="likes" href="#42"><p><span class="icon fontawesome-remove scnd-font-color"></span></li></p></a>'
+                        document.getElementById("pps").innerHTML= '<li><a class="comments" id="play" href="#" onclick=changepps(this)><p><span class="icon fontawesome-play " style="color:#32CD32;"></span></li></p></a><li><a class="views" id="pause" href="#" onclick=changepps(this)><p><span class="icon fontawesome-pause scnd-font-color"></span></li></p></a><li><a class="likes" id="stop" href="#" onclick=changepps(this)><p><span class="icon fontawesome-remove scnd-font-color"></span></li></p></a>'
                     }
 
                 }
@@ -127,7 +126,7 @@
 	<div class="main-container">
 	<header class="block">
                 <ul class="header-menu horizontal-list">
-                    <h1 style="text-align: center;">Welcome to SuperWeb Control</h1>
+                    <h1 style="text-align: center;">Welcome to Mach Online</h1>
                 </ul>
             </header>
 
@@ -157,12 +156,12 @@
 
     <div class="middle-container container">
 <ul class="social block"> <!-- SOCIAL (MIDDLE-CONTAINER) -->
-                    <li><a href="#52"><div class="googleplus icon"><span class="fontawesome-bolt"></span></div><h2 id="volt" class="googleplus titular">VOLTAGE</h2></li></a>
-                    <li><a href="#50"><div class="facebook icon"><span class="fontawesome-dashboard"></span></div><h2 id="curr" class="facebook titular">CURRENT:</h2></li></a>
-                    <li><a href="#51"><div class="twitter icon"><span class="fontawesome-adjust"></span></div><h2 id="pc" class="twitter titular">POWER CONSUMED: </h2></li></a>
-                    <li><a href="#52"><div class="powerf icon"><span class="fontawesome-leaf"></span></div><h2 id="pf" class="powerf titular">POWER FACTOR</h2></li></a>
-                    <li><a href="#52"><div class="googleplus icon"><span class="fontawesome-fire"></span></div><h2 id="btemp" class="googleplus titular">BED TEMP.</h2></li></a>
-                    <li><a href="#52"><div class="googleplus icon"><span class="fontawesome-asterisk"></span></div><h2 id="etemp" class="googleplus titular">EXTRUDER TEMP.</h2></li></a>
+                    <li><a href="/vgraph"><div class="googleplus icon"><span class="fontawesome-bolt"></span></div><h2 id="volt" class="googleplus titular">VOLTAGE</h2></li></a>
+                    <li><a href="/cgraph"><div class="facebook icon"><span class="fontawesome-dashboard"></span></div><h2 id="curr" class="facebook titular">CURRENT:</h2></li></a>
+                    <li><a href="/pgraph"><div class="twitter icon"><span class="fontawesome-adjust"></span></div><h2 id="pc" class="twitter titular">POWER CONSUMED: </h2></li></a>
+                    <li><a href="/pfgraph"><div class="powerf icon"><span class="fontawesome-leaf"></span></div><h2 id="pf" class="powerf titular">POWER FACTOR</h2></li></a>
+                    <li><a href="/btempgraph"><div class="googleplus icon"><span class="fontawesome-fire"></span></div><h2 id="btemp" class="googleplus titular">BED TEMP.</h2></li></a>
+                    <li><a href="/etempgraph"><div class="googleplus icon"><span class="fontawesome-asterisk"></span></div><h2 id="etemp" class="googleplus titular">EXTRUDER TEMP.</h2></li></a>
                     
  </ul>
 </div>
@@ -185,10 +184,11 @@
                         <p class="mac os scnd-font-color">Refresh</p>
                             <span class="entypo-ccw "></span>
                         </li></a>
+                        <a href="/report">
                         <li>
-                            <p class="linux os scnd-font-color">Dummy </p>
+                            <p class="linux os scnd-font-color">Report </p>
                             <span class="entypo-light-up "></span>
-                        </li>
+                        </li></a>
                        </ul>
                 </div>
    <form action="" method="post" enctype="multipart/form-data">
